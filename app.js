@@ -10,6 +10,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map)
 
 const markers = {}
+let simulationRunning = false
 
 async function loadVehicles() {
   const { data, error } = await supabaseClient
@@ -45,17 +46,93 @@ async function loadVehicles() {
       const color = vehicle.status === 'moving' ? 'green' : 'red'
 
       const icon = L.divIcon({
-        html: `<div style="width:15px;height:15px;background:${color};border-radius:50%"></div>`
+        className: '',
+        html: `<div style="width:15px;height:15px;background:${color};border-radius:50%;border:2px solid white;"></div>`,
+        iconSize: [15, 15],
+        iconAnchor: [7, 7]
       })
 
       if (markers[vehicle.id]) {
         markers[vehicle.id].setLatLng([vehicle.lat, vehicle.lng])
+        markers[vehicle.id].setIcon(icon)
       } else {
         markers[vehicle.id] = L.marker([vehicle.lat, vehicle.lng], { icon }).addTo(map)
       }
     }
   })
 }
+
+async function startSimulation() {
+  if (simulationRunning) return
+  simulationRunning = true
+
+  document.getElementById('status').innerText = 'Symulacja uruchomiona'
+
+  const { data: vehicle, error: vehicleError } = await supabaseClient
+    .from('vehicles')
+    .select('*')
+    .eq('registration', 'DW 1234A')
+    .single()
+
+  if (vehicleError || !vehicle) {
+    console.error(vehicleError)
+    document.getElementById('status').innerText = 'Nie znaleziono pojazdu'
+    simulationRunning = false
+    return
+  }
+
+  const { data: points, error: pointsError } = await supabaseClient
+    .from('route_points')
+    .select('*')
+    .eq('route_id', vehicle.route_id)
+    .order('position', { ascending: true })
+
+  if (pointsError || !points || !points.length) {
+    console.error(pointsError)
+    document.getElementById('status').innerText = 'Brak punktów trasy'
+    simulationRunning = false
+    return
+  }
+
+  for (let i = 0; i < points.length; i++) {
+    const point = points[i]
+    const isStop = (point.stop_seconds || 0) > 0
+
+    const newStatus = isStop ? 'stopped' : 'moving'
+    const newSpeed = isStop ? 0 : (point.speed_limit || 50)
+
+    const { error: updateError } = await supabaseClient
+      .from('vehicles')
+      .update({
+        lat: point.lat,
+        lng: point.lng,
+        status: newStatus,
+        speed: newSpeed
+      })
+      .eq('registration', 'DW 1234A')
+
+    if (updateError) {
+      console.error(updateError)
+      document.getElementById('status').innerText = 'Błąd aktualizacji pojazdu'
+      simulationRunning = false
+      return
+    }
+
+    await loadVehicles()
+
+    const waitSeconds = isStop ? Math.max(point.stop_seconds, 2) : 3
+    await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000))
+  }
+
+  document.getElementById('status').innerText = 'Symulacja zakończona'
+  simulationRunning = false
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'start-simulation') {
+    startSimulation()
+  }
+})
 
 loadVehicles()
 setInterval(loadVehicles, 5000)
