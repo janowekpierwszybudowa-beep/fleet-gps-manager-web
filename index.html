@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fleet GPS Manager</title>
+  <title>Velora Fleet Systems</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -12,10 +12,10 @@
     <aside class="sidebar">
       <div class="brand-card">
         <div class="brand-top">
-          <div class="brand-badge">FGM</div>
+          <div class="brand-badge">VFS</div>
           <div>
-            <h1>Fleet GPS Manager</h1>
-            <p class="brand-subtitle">Symulator GPS do celów szkoleniowych</p>
+            <h1>Velora Fleet Systems</h1>
+            <p class="brand-subtitle">Fleet visibility and route monitoring</p>
           </div>
         </div>
         <div class="view-pill" id="view-label">Ładowanie widoku...</div>
@@ -33,8 +33,8 @@
         <div class="card-title-row">
           <h3>Panel administratora</h3>
         </div>
-        <button id="start-simulation">Start symulacji</button>
-        <p class="hint">Uruchamia przejazd ciężarówki po zapisanej trasie szkoleniowej.</p>
+        <button id="start-simulation">Start przejazdu</button>
+        <p class="hint">Uruchamia przejazd pojazdu po zapisanej trasie.</p>
       </div>
 
       <div class="card">
@@ -48,8 +48,8 @@
     <main class="map-panel">
       <div class="map-header">
         <div>
-          <div class="map-title">Podgląd live pojazdu</div>
-          <div class="map-subtitle">Mapa odświeża dane automatycznie</div>
+          <div class="map-title">Live Fleet View</div>
+          <div class="map-subtitle">Monitoring pozycji i statusu pojazdu</div>
         </div>
         <div class="legend">
           <div class="legend-item">
@@ -63,7 +63,29 @@
         </div>
       </div>
 
-      <div id="map"></div>
+      <div class="map-wrap">
+        <div id="map"></div>
+
+        <div class="mini-info-card" id="mini-info-card">
+          <div class="mini-info-title">Szczegóły pojazdu</div>
+          <div class="mini-info-row">
+            <span>Rejestracja</span>
+            <strong id="mini-registration">-</strong>
+          </div>
+          <div class="mini-info-row">
+            <span>Status</span>
+            <strong id="mini-status">-</strong>
+          </div>
+          <div class="mini-info-row">
+            <span>Prędkość</span>
+            <strong id="mini-speed">-</strong>
+          </div>
+          <div class="mini-info-row">
+            <span>Typ widoku</span>
+            <strong id="mini-view">-</strong>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 
