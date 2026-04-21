@@ -62,6 +62,23 @@ async function loadVehicles() {
   })
 }
 
+async function saveVehicleHistory(vehicleId, point, newSpeed, newStatus) {
+  const { error } = await supabaseClient
+    .from('vehicle_history')
+    .insert({
+      vehicle_id: vehicleId,
+      lat: point.lat,
+      lng: point.lng,
+      speed: newSpeed,
+      status: newStatus,
+      road_type: point.road_type
+    })
+
+  if (error) {
+    console.error('Błąd zapisu historii:', error)
+  }
+}
+
 async function startSimulation() {
   if (simulationRunning) return
   simulationRunning = true
@@ -118,6 +135,7 @@ async function startSimulation() {
       return
     }
 
+    await saveVehicleHistory(vehicle.id, point, newSpeed, newStatus)
     await loadVehicles()
 
     const waitSeconds = isStop ? Math.max(point.stop_seconds, 2) : 3
