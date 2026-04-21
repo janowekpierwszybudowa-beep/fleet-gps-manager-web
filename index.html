@@ -11,18 +11,22 @@
   <div class="app">
     <aside class="sidebar">
       <h1>Fleet GPS Manager</h1>
-      <p>Podgląd pojazdów (LIVE)</p>
+      <p id="view-label">Ładowanie widoku...</p>
 
-      <div>
-        <h3>Status:</h3>
+      <div class="card">
+        <h3>Status systemu</h3>
         <div id="status">Ładowanie...</div>
       </div>
 
-      <div>
-  <h3>Pojazdy:</h3>
-  <button id="start-simulation">Start symulacji</button>
-  <div id="vehicle-list"></div>
-</div>
+      <div class="card" id="admin-controls" style="display:none;">
+        <h3>Panel administratora</h3>
+        <button id="start-simulation">Start symulacji</button>
+      </div>
+
+      <div class="card">
+        <h3>Pojazdy</h3>
+        <div id="vehicle-list"></div>
+      </div>
     </aside>
 
     <div id="map"></div>
