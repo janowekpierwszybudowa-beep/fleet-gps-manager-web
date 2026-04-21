@@ -4,93 +4,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Velora Fleet Systems</title>
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand-card">
-        <div class="brand-top">
-          <div class="brand-badge">VFS</div>
-          <div>
-            <h1>Velora Fleet Systems</h1>
-            <p class="brand-subtitle">Fleet visibility and route monitoring</p>
-          </div>
-        </div>
-        <div class="view-pill" id="view-label" style="display:none;"></div>
-      </div>
 
-      <div class="card">
-        <div class="card-title-row">
-          <h3>Status systemu</h3>
-          <span class="status-dot"></span>
-        </div>
-        <div id="status" class="system-status">Ładowanie...</div>
-      </div>
+<div class="app">
 
-      <div class="card" id="admin-controls" style="display:none;">
-        <div class="card-title-row">
-          <h3>Panel administratora</h3>
-        </div>
-        <button id="start-simulation">Start przejazdu</button>
-        <p class="hint">Uruchamia przejazd pojazdu po zapisanej trasie.</p>
-      </div>
+  <aside class="sidebar">
 
-      <div class="card">
-        <div class="card-title-row">
-          <h3>Aktywny pojazd</h3>
-        </div>
-        <div id="vehicle-list"></div>
-      </div>
-    </aside>
+    <div class="brand-card">
+      <h1>Velora Fleet Systems</h1>
+    </div>
 
-    <main class="map-panel">
-      <div class="map-header">
-        <div>
-          <div class="map-title">Live Fleet View</div>
-          <div class="map-subtitle">Monitoring pozycji i statusu pojazdu</div>
-        </div>
-        <div class="legend">
-          <div class="legend-item">
-            <span class="legend-color moving"></span>
-            <span>W ruchu</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-color stopped"></span>
-            <span>Postój</span>
-          </div>
-        </div>
-      </div>
+    <div class="card" id="admin-controls" style="display:none;">
+      <h3>Panel administratora</h3>
 
-      <div class="map-wrap">
-        <div id="map"></div>
+      <input id="start-lat" placeholder="Start LAT (np 52.2297)">
+      <input id="start-lng" placeholder="Start LNG (np 21.0122)">
 
-        <div class="mini-info-card" id="mini-info-card">
-          <div class="mini-info-title">Szczegóły pojazdu</div>
-          <div class="mini-info-row">
-            <span>Rejestracja</span>
-            <strong id="mini-registration">-</strong>
-          </div>
-          <div class="mini-info-row">
-            <span>Status</span>
-            <strong id="mini-status">-</strong>
-          </div>
-          <div class="mini-info-row">
-            <span>Prędkość</span>
-            <strong id="mini-speed">-</strong>
-          </div>
-          <div class="mini-info-row" id="mini-view-row" style="display:none;">
-            <span>Typ widoku</span>
-            <strong id="mini-view">-</strong>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
+      <input id="end-lat" placeholder="Cel LAT (np 52.5200)">
+      <input id="end-lng" placeholder="Cel LNG (np 13.4050)">
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
+      <input id="duration" placeholder="Czas (minuty)" value="60">
+
+      <button id="start-trip">Start przejazdu</button>
+    </div>
+
+    <div class="card">
+      <h3>Status</h3>
+      <div id="status">Ładowanie...</div>
+    </div>
+
+  </aside>
+
+  <div id="map"></div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+
 </body>
 </html>
