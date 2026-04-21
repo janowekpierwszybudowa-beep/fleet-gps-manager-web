@@ -10,26 +10,61 @@
 <body>
   <div class="app">
     <aside class="sidebar">
-      <h1>Fleet GPS Manager</h1>
-      <p id="view-label">Ładowanie widoku...</p>
+      <div class="brand-card">
+        <div class="brand-top">
+          <div class="brand-badge">FGM</div>
+          <div>
+            <h1>Fleet GPS Manager</h1>
+            <p class="brand-subtitle">Symulator GPS do celów szkoleniowych</p>
+          </div>
+        </div>
+        <div class="view-pill" id="view-label">Ładowanie widoku...</div>
+      </div>
 
       <div class="card">
-        <h3>Status systemu</h3>
-        <div id="status">Ładowanie...</div>
+        <div class="card-title-row">
+          <h3>Status systemu</h3>
+          <span class="status-dot"></span>
+        </div>
+        <div id="status" class="system-status">Ładowanie...</div>
       </div>
 
       <div class="card" id="admin-controls" style="display:none;">
-        <h3>Panel administratora</h3>
+        <div class="card-title-row">
+          <h3>Panel administratora</h3>
+        </div>
         <button id="start-simulation">Start symulacji</button>
+        <p class="hint">Uruchamia przejazd ciężarówki po zapisanej trasie szkoleniowej.</p>
       </div>
 
       <div class="card">
-        <h3>Pojazdy</h3>
+        <div class="card-title-row">
+          <h3>Aktywny pojazd</h3>
+        </div>
         <div id="vehicle-list"></div>
       </div>
     </aside>
 
-    <div id="map"></div>
+    <main class="map-panel">
+      <div class="map-header">
+        <div>
+          <div class="map-title">Podgląd live pojazdu</div>
+          <div class="map-subtitle">Mapa odświeża dane automatycznie</div>
+        </div>
+        <div class="legend">
+          <div class="legend-item">
+            <span class="legend-color moving"></span>
+            <span>W ruchu</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color stopped"></span>
+            <span>Postój</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="map"></div>
+    </main>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
