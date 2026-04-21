@@ -49,38 +49,64 @@ function createTruckIcon(status) {
   return L.divIcon({
     className: '',
     html: `
-      <div style="
-        width: 28px;
-        height: 16px;
-        background: ${color};
-        border-radius: 4px;
-        border: 2px solid white;
-        position: relative;
-      ">
+      <div style="position: relative; width: 38px; height: 22px;">
         <div style="
           position:absolute;
-          right:-8px;
+          left:0;
           top:2px;
+          width:26px;
+          height:14px;
+          background:${color};
+          border:2px solid white;
+          border-radius:4px;
+          box-shadow:0 4px 10px rgba(0,0,0,0.25);
+        "></div>
+
+        <div style="
+          position:absolute;
+          left:24px;
+          top:4px;
           width:10px;
           height:10px;
           background:${color};
           border:2px solid white;
-          border-radius:2px;
+          border-radius:3px;
+        "></div>
+
+        <div style="
+          position:absolute;
+          left:4px;
+          top:16px;
+          width:6px;
+          height:6px;
+          border-radius:50%;
+          background:#111827;
+        "></div>
+
+        <div style="
+          position:absolute;
+          left:18px;
+          top:16px;
+          width:6px;
+          height:6px;
+          border-radius:50%;
+          background:#111827;
+        "></div>
+
+        <div style="
+          position:absolute;
+          left:30px;
+          top:16px;
+          width:6px;
+          height:6px;
+          border-radius:50%;
+          background:#111827;
         "></div>
       </div>
     `,
-    iconSize: [36, 20],
-    iconAnchor: [18, 10]
-  })
-}
-  const truckClass = status === 'moving' ? 'truck-moving' : 'truck-stopped'
-
-  return L.divIcon({
-    className: '',
-    html: `<div class="truck-marker ${truckClass}"></div>`,
-    iconSize: [46, 28],
-    iconAnchor: [23, 14],
-    popupAnchor: [0, -12]
+    iconSize: [38, 22],
+    iconAnchor: [19, 11],
+    popupAnchor: [0, -10]
   })
 }
 
@@ -101,6 +127,7 @@ async function loadVehicles() {
   list.innerHTML = ''
 
   let firstVehicle = null
+  const activeIds = new Set()
 
   data.forEach(vehicle => {
     if (!firstVehicle) firstVehicle = vehicle
@@ -114,30 +141,39 @@ async function loadVehicles() {
     item.innerHTML = `
       <strong>${vehicle.registration}</strong>
       Status: <span class="${statusClass}">${statusText}</span><br>
-      Prędkość: ${vehicle.speed} km/h
+      Prędkość: ${vehicle.speed || 0} km/h
     `
 
     list.appendChild(item)
 
-    if (vehicle.lat && vehicle.lng) {
+    if (vehicle.lat !== null && vehicle.lng !== null) {
+      activeIds.add(vehicle.id)
       const icon = createTruckIcon(vehicle.status)
 
       if (markers[vehicle.id]) {
-        markers[vehicle.id].setLatLng([vehicle.lat, vehicle.lng])
+        markers[vehicle.id].setLatLng([Number(vehicle.lat), Number(vehicle.lng)])
         markers[vehicle.id].setIcon(icon)
         markers[vehicle.id].bindPopup(`
           <strong>${vehicle.registration}</strong><br>
           Status: ${statusText}<br>
-          Prędkość: ${vehicle.speed} km/h
+          Prędkość: ${vehicle.speed || 0} km/h
         `)
       } else {
-        markers[vehicle.id] = L.marker([vehicle.lat, vehicle.lng], { icon }).addTo(map)
+        markers[vehicle.id] = L.marker([Number(vehicle.lat), Number(vehicle.lng)], { icon })
+          .addTo(map)
           .bindPopup(`
             <strong>${vehicle.registration}</strong><br>
             Status: ${statusText}<br>
-            Prędkość: ${vehicle.speed} km/h
+            Prędkość: ${vehicle.speed || 0} km/h
           `)
       }
+    }
+  })
+
+  Object.keys(markers).forEach(id => {
+    if (!activeIds.has(id)) {
+      map.removeLayer(markers[id])
+      delete markers[id]
     }
   })
 
