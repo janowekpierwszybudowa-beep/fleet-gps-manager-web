@@ -12,6 +12,20 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const markers = {}
 let simulationRunning = false
 
+const params = new URLSearchParams(window.location.search)
+const currentView = params.get('view') === 'admin' ? 'admin' : 'kursant'
+
+const viewLabel = document.getElementById('view-label')
+const adminControls = document.getElementById('admin-controls')
+
+if (currentView === 'admin') {
+  viewLabel.innerText = 'Widok: administrator'
+  adminControls.style.display = 'block'
+} else {
+  viewLabel.innerText = 'Widok: kursant'
+  adminControls.style.display = 'none'
+}
+
 async function loadVehicles() {
   const { data, error } = await supabaseClient
     .from('vehicles')
@@ -33,10 +47,11 @@ async function loadVehicles() {
     item.className = 'vehicle-item'
 
     const statusClass = vehicle.status === 'moving' ? 'status-moving' : 'status-stopped'
+    const statusText = vehicle.status === 'moving' ? 'W ruchu' : 'Postój'
 
     item.innerHTML = `
       <strong>${vehicle.registration}</strong><br>
-      Status: <span class="${statusClass}">${vehicle.status}</span><br>
+      Status: <span class="${statusClass}">${statusText}</span><br>
       Prędkość: ${vehicle.speed} km/h
     `
 
@@ -80,9 +95,10 @@ async function saveVehicleHistory(vehicleId, point, newSpeed, newStatus) {
 }
 
 async function startSimulation() {
+  if (currentView !== 'admin') return
   if (simulationRunning) return
-  simulationRunning = true
 
+  simulationRunning = true
   document.getElementById('status').innerText = 'Symulacja uruchomiona'
 
   const { data: vehicle, error: vehicleError } = await supabaseClient
