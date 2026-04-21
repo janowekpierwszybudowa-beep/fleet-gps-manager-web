@@ -17,15 +17,18 @@ const currentView = params.get('view') === 'admin' ? 'admin' : 'kursant'
 
 const viewLabel = document.getElementById('view-label')
 const adminControls = document.getElementById('admin-controls')
+const miniViewRow = document.getElementById('mini-view-row')
 
 if (currentView === 'admin') {
   viewLabel.innerText = 'Widok: administrator'
   viewLabel.style.display = 'inline-flex'
   adminControls.style.display = 'block'
+  miniViewRow.style.display = 'flex'
 } else {
   viewLabel.innerText = ''
   viewLabel.style.display = 'none'
   adminControls.style.display = 'none'
+  miniViewRow.style.display = 'none'
 }
 
 function updateMiniCard(vehicle) {
@@ -34,8 +37,10 @@ function updateMiniCard(vehicle) {
     vehicle?.status === 'moving' ? 'W ruchu' : vehicle?.status === 'stopped' ? 'Postój' : '-'
   document.getElementById('mini-speed').innerText =
     vehicle?.speed != null ? `${vehicle.speed} km/h` : '-'
-  document.getElementById('mini-view').innerText =
-    currentView === 'admin' ? 'Administrator' : 'Standard'
+
+  if (currentView === 'admin') {
+    document.getElementById('mini-view').innerText = 'Administrator'
+  }
 }
 
 function createTruckIcon(status) {
