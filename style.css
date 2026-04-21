@@ -35,3 +35,16 @@ html, body {
 .status-stopped {
   color: red;
 }
+button {
+  background: #2f6fed;
+  color: white;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+button:hover {
+  opacity: 0.95;
+}
