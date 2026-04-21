@@ -20,10 +20,34 @@ const adminControls = document.getElementById('admin-controls')
 
 if (currentView === 'admin') {
   viewLabel.innerText = 'Widok: administrator'
+  viewLabel.style.display = 'inline-flex'
   adminControls.style.display = 'block'
 } else {
-  viewLabel.innerText = 'Widok: kursant'
+  viewLabel.innerText = ''
+  viewLabel.style.display = 'none'
   adminControls.style.display = 'none'
+}
+
+function updateMiniCard(vehicle) {
+  document.getElementById('mini-registration').innerText = vehicle?.registration || '-'
+  document.getElementById('mini-status').innerText =
+    vehicle?.status === 'moving' ? 'W ruchu' : vehicle?.status === 'stopped' ? 'Postój' : '-'
+  document.getElementById('mini-speed').innerText =
+    vehicle?.speed != null ? `${vehicle.speed} km/h` : '-'
+  document.getElementById('mini-view').innerText =
+    currentView === 'admin' ? 'Administrator' : 'Standard'
+}
+
+function createTruckIcon(status) {
+  const truckClass = status === 'moving' ? 'truck-moving' : 'truck-stopped'
+
+  return L.divIcon({
+    className: '',
+    html: `<div class="truck-marker ${truckClass}"></div>`,
+    iconSize: [46, 28],
+    iconAnchor: [23, 14],
+    popupAnchor: [0, -12]
+  })
 }
 
 async function loadVehicles() {
@@ -42,7 +66,11 @@ async function loadVehicles() {
   const list = document.getElementById('vehicle-list')
   list.innerHTML = ''
 
+  let firstVehicle = null
+
   data.forEach(vehicle => {
+    if (!firstVehicle) firstVehicle = vehicle
+
     const item = document.createElement('div')
     item.className = 'vehicle-item'
 
@@ -50,7 +78,7 @@ async function loadVehicles() {
     const statusText = vehicle.status === 'moving' ? 'W ruchu' : 'Postój'
 
     item.innerHTML = `
-      <strong>${vehicle.registration}</strong><br>
+      <strong>${vehicle.registration}</strong>
       Status: <span class="${statusClass}">${statusText}</span><br>
       Prędkość: ${vehicle.speed} km/h
     `
@@ -58,23 +86,28 @@ async function loadVehicles() {
     list.appendChild(item)
 
     if (vehicle.lat && vehicle.lng) {
-      const color = vehicle.status === 'moving' ? 'green' : 'red'
-
-      const icon = L.divIcon({
-        className: '',
-        html: `<div style="width:15px;height:15px;background:${color};border-radius:50%;border:2px solid white;"></div>`,
-        iconSize: [15, 15],
-        iconAnchor: [7, 7]
-      })
+      const icon = createTruckIcon(vehicle.status)
 
       if (markers[vehicle.id]) {
         markers[vehicle.id].setLatLng([vehicle.lat, vehicle.lng])
         markers[vehicle.id].setIcon(icon)
+        markers[vehicle.id].bindPopup(`
+          <strong>${vehicle.registration}</strong><br>
+          Status: ${statusText}<br>
+          Prędkość: ${vehicle.speed} km/h
+        `)
       } else {
         markers[vehicle.id] = L.marker([vehicle.lat, vehicle.lng], { icon }).addTo(map)
+          .bindPopup(`
+            <strong>${vehicle.registration}</strong><br>
+            Status: ${statusText}<br>
+            Prędkość: ${vehicle.speed} km/h
+          `)
       }
     }
   })
+
+  updateMiniCard(firstVehicle)
 }
 
 async function saveVehicleHistory(vehicleId, point, newSpeed, newStatus) {
@@ -99,7 +132,7 @@ async function startSimulation() {
   if (simulationRunning) return
 
   simulationRunning = true
-  document.getElementById('status').innerText = 'Symulacja uruchomiona'
+  document.getElementById('status').innerText = 'Przejazd uruchomiony'
 
   const { data: vehicle, error: vehicleError } = await supabaseClient
     .from('vehicles')
@@ -158,7 +191,7 @@ async function startSimulation() {
     await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000))
   }
 
-  document.getElementById('status').innerText = 'Symulacja zakończona'
+  document.getElementById('status').innerText = 'Przejazd zakończony'
   simulationRunning = false
 }
 
