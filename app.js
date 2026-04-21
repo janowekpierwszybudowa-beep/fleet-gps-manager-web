@@ -5,271 +5,94 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const map = L.map('map').setView([52.1, 19.4], 6)
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map)
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 
 const markers = {}
-let simulationRunning = false
 
 const params = new URLSearchParams(window.location.search)
 const currentView = params.get('view') === 'admin' ? 'admin' : 'kursant'
 
-const viewLabel = document.getElementById('view-label')
-const adminControls = document.getElementById('admin-controls')
-const miniViewRow = document.getElementById('mini-view-row')
+document.getElementById('admin-controls').style.display =
+  currentView === 'admin' ? 'block' : 'none'
 
-if (currentView === 'admin') {
-  viewLabel.innerText = 'Widok: administrator'
-  viewLabel.style.display = 'inline-flex'
-  adminControls.style.display = 'block'
-  miniViewRow.style.display = 'flex'
-} else {
-  viewLabel.innerText = ''
-  viewLabel.style.display = 'none'
-  adminControls.style.display = 'none'
-  miniViewRow.style.display = 'none'
-}
-
-function updateMiniCard(vehicle) {
-  document.getElementById('mini-registration').innerText = vehicle?.registration || '-'
-  document.getElementById('mini-status').innerText =
-    vehicle?.status === 'moving' ? 'W ruchu' : vehicle?.status === 'stopped' ? 'Postój' : '-'
-  document.getElementById('mini-speed').innerText =
-    vehicle?.speed != null ? `${vehicle.speed} km/h` : '-'
-
-  if (currentView === 'admin') {
-    document.getElementById('mini-view').innerText = 'Administrator'
-  }
-}
-
-function createTruckIcon(status) {
-  const color = status === 'moving' ? '#22c55e' : '#ef4444'
-
+function createIcon() {
   return L.divIcon({
-    className: '',
-    html: `
-      <div style="position: relative; width: 38px; height: 22px;">
-        <div style="
-          position:absolute;
-          left:0;
-          top:2px;
-          width:26px;
-          height:14px;
-          background:${color};
-          border:2px solid white;
-          border-radius:4px;
-          box-shadow:0 4px 10px rgba(0,0,0,0.25);
-        "></div>
-
-        <div style="
-          position:absolute;
-          left:24px;
-          top:4px;
-          width:10px;
-          height:10px;
-          background:${color};
-          border:2px solid white;
-          border-radius:3px;
-        "></div>
-
-        <div style="
-          position:absolute;
-          left:4px;
-          top:16px;
-          width:6px;
-          height:6px;
-          border-radius:50%;
-          background:#111827;
-        "></div>
-
-        <div style="
-          position:absolute;
-          left:18px;
-          top:16px;
-          width:6px;
-          height:6px;
-          border-radius:50%;
-          background:#111827;
-        "></div>
-
-        <div style="
-          position:absolute;
-          left:30px;
-          top:16px;
-          width:6px;
-          height:6px;
-          border-radius:50%;
-          background:#111827;
-        "></div>
-      </div>
-    `,
-    iconSize: [38, 22],
-    iconAnchor: [19, 11],
-    popupAnchor: [0, -10]
+    html: `<div style="width:14px;height:14px;background:#22c55e;border-radius:50%"></div>`,
+    iconSize: [14, 14]
   })
 }
 
-async function loadVehicles() {
-  const { data, error } = await supabaseClient
+async function loadVehicle() {
+  const { data } = await supabaseClient
     .from('vehicles')
     .select('*')
-
-  if (error) {
-    document.getElementById('status').innerText = 'Błąd połączenia'
-    console.error(error)
-    return
-  }
-
-  document.getElementById('status').innerText = 'Połączono'
-
-  const list = document.getElementById('vehicle-list')
-  list.innerHTML = ''
-
-  let firstVehicle = null
-  const activeIds = new Set()
-
-  data.forEach(vehicle => {
-    if (!firstVehicle) firstVehicle = vehicle
-
-    const item = document.createElement('div')
-    item.className = 'vehicle-item'
-
-    const statusClass = vehicle.status === 'moving' ? 'status-moving' : 'status-stopped'
-    const statusText = vehicle.status === 'moving' ? 'W ruchu' : 'Postój'
-
-    item.innerHTML = `
-      <strong>${vehicle.registration}</strong>
-      Status: <span class="${statusClass}">${statusText}</span><br>
-      Prędkość: ${vehicle.speed || 0} km/h
-    `
-
-    list.appendChild(item)
-
-    if (vehicle.lat !== null && vehicle.lng !== null) {
-      activeIds.add(vehicle.id)
-      const icon = createTruckIcon(vehicle.status)
-
-      if (markers[vehicle.id]) {
-        markers[vehicle.id].setLatLng([Number(vehicle.lat), Number(vehicle.lng)])
-        markers[vehicle.id].setIcon(icon)
-        markers[vehicle.id].bindPopup(`
-          <strong>${vehicle.registration}</strong><br>
-          Status: ${statusText}<br>
-          Prędkość: ${vehicle.speed || 0} km/h
-        `)
-      } else {
-        markers[vehicle.id] = L.marker([Number(vehicle.lat), Number(vehicle.lng)], { icon })
-          .addTo(map)
-          .bindPopup(`
-            <strong>${vehicle.registration}</strong><br>
-            Status: ${statusText}<br>
-            Prędkość: ${vehicle.speed || 0} km/h
-          `)
-      }
-    }
-  })
-
-  Object.keys(markers).forEach(id => {
-    if (!activeIds.has(id)) {
-      map.removeLayer(markers[id])
-      delete markers[id]
-    }
-  })
-
-  updateMiniCard(firstVehicle)
-}
-
-async function saveVehicleHistory(vehicleId, point, newSpeed, newStatus) {
-  const { error } = await supabaseClient
-    .from('vehicle_history')
-    .insert({
-      vehicle_id: vehicleId,
-      lat: point.lat,
-      lng: point.lng,
-      speed: newSpeed,
-      status: newStatus,
-      road_type: point.road_type
-    })
-
-  if (error) {
-    console.error('Błąd zapisu historii:', error)
-  }
-}
-
-async function startSimulation() {
-  if (currentView !== 'admin') return
-  if (simulationRunning) return
-
-  simulationRunning = true
-  document.getElementById('status').innerText = 'Przejazd uruchomiony'
-
-  const { data: vehicle, error: vehicleError } = await supabaseClient
-    .from('vehicles')
-    .select('*')
-    .eq('registration', 'DW 1234A')
     .single()
 
-  if (vehicleError || !vehicle) {
-    console.error(vehicleError)
-    document.getElementById('status').innerText = 'Nie znaleziono pojazdu'
-    simulationRunning = false
-    return
+  if (!data) return
+
+  if (!markers[data.id]) {
+    markers[data.id] = L.marker([data.lat, data.lng], { icon: createIcon() }).addTo(map)
   }
 
-  const { data: points, error: pointsError } = await supabaseClient
-    .from('route_points')
-    .select('*')
-    .eq('route_id', vehicle.route_id)
-    .order('position', { ascending: true })
-
-  if (pointsError || !points || !points.length) {
-    console.error(pointsError)
-    document.getElementById('status').innerText = 'Brak punktów trasy'
-    simulationRunning = false
-    return
-  }
-
-  for (let i = 0; i < points.length; i++) {
-    const point = points[i]
-    const isStop = (point.stop_seconds || 0) > 0
-
-    const newStatus = isStop ? 'stopped' : 'moving'
-    const newSpeed = isStop ? 0 : (point.speed_limit || 50)
-
-    const { error: updateError } = await supabaseClient
-      .from('vehicles')
-      .update({
-        lat: point.lat,
-        lng: point.lng,
-        status: newStatus,
-        speed: newSpeed
-      })
-      .eq('registration', 'DW 1234A')
-
-    if (updateError) {
-      console.error(updateError)
-      document.getElementById('status').innerText = 'Błąd aktualizacji pojazdu'
-      simulationRunning = false
-      return
-    }
-
-    await saveVehicleHistory(vehicle.id, point, newSpeed, newStatus)
-    await loadVehicles()
-
-    const waitSeconds = isStop ? Math.max(point.stop_seconds, 2) : 3
-    await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000))
-  }
-
-  document.getElementById('status').innerText = 'Przejazd zakończony'
-  simulationRunning = false
+  markers[data.id].setLatLng([data.lat, data.lng])
 }
 
-document.addEventListener('click', (e) => {
-  if (e.target && e.target.id === 'start-simulation') {
-    startSimulation()
+async function animateVehicle() {
+  const { data: trip } = await supabaseClient
+    .from('active_trip')
+    .select('*')
+    .order('start_time', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (!trip) return
+
+  const now = Date.now()
+  const start = new Date(trip.start_time).getTime()
+  const end = new Date(trip.end_time).getTime()
+
+  const progress = Math.min(1, (now - start) / (end - start))
+
+  const lat = trip.start_lat + (trip.end_lat - trip.start_lat) * progress
+  const lng = trip.start_lng + (trip.end_lng - trip.start_lng) * progress
+
+  await supabaseClient
+    .from('vehicles')
+    .update({ lat, lng })
+    .eq('id', trip.vehicle_id)
+
+  loadVehicle()
+}
+
+setInterval(animateVehicle, 1000)
+
+document.addEventListener('click', async (e) => {
+  if (e.target.id === 'start-trip') {
+
+    const startLat = parseFloat(document.getElementById('start-lat').value)
+    const startLng = parseFloat(document.getElementById('start-lng').value)
+    const endLat = parseFloat(document.getElementById('end-lat').value)
+    const endLng = parseFloat(document.getElementById('end-lng').value)
+    const duration = parseInt(document.getElementById('duration').value)
+
+    const now = new Date()
+    const endTime = new Date(now.getTime() + duration * 60000)
+
+    const { data: vehicle } = await supabaseClient
+      .from('vehicles')
+      .select('*')
+      .single()
+
+    await supabaseClient.from('active_trip').insert({
+      vehicle_id: vehicle.id,
+      start_lat: startLat,
+      start_lng: startLng,
+      end_lat: endLat,
+      end_lng: endLng,
+      start_time: now,
+      end_time: endTime
+    })
   }
 })
 
-loadVehicles()
-setInterval(loadVehicles, 5000)
+loadVehicle()
