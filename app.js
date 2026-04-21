@@ -44,6 +44,35 @@ function updateMiniCard(vehicle) {
 }
 
 function createTruckIcon(status) {
+  const color = status === 'moving' ? '#22c55e' : '#ef4444'
+
+  return L.divIcon({
+    className: '',
+    html: `
+      <div style="
+        width: 28px;
+        height: 16px;
+        background: ${color};
+        border-radius: 4px;
+        border: 2px solid white;
+        position: relative;
+      ">
+        <div style="
+          position:absolute;
+          right:-8px;
+          top:2px;
+          width:10px;
+          height:10px;
+          background:${color};
+          border:2px solid white;
+          border-radius:2px;
+        "></div>
+      </div>
+    `,
+    iconSize: [36, 20],
+    iconAnchor: [18, 10]
+  })
+}
   const truckClass = status === 'moving' ? 'truck-moving' : 'truck-stopped'
 
   return L.divIcon({
